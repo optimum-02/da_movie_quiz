@@ -39,8 +39,9 @@ class GameInProgress extends GameState {
 
 class GameOver extends GameState {
   final int finalScore;
+  final int hightScore;
 
-  const GameOver(this.finalScore);
+  const GameOver(this.finalScore, this.hightScore);
 
   @override
   List<Object> get props => [finalScore];

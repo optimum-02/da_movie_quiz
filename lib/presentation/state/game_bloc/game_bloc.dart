@@ -1,21 +1,34 @@
+import 'dart:async';
+
+import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:da_movie_quiz/core/failures.dart';
 import 'package:da_movie_quiz/domain/uses_cases/uses_cases.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'dart:async';
-import 'package:equatable/equatable.dart';
 
 import '../../../domain/entities/entities.dart';
 
 part 'game_event.dart';
 part 'game_state.dart';
 
+const gameMaxTimeInSecond = 60;
+
 class GameBloc extends Bloc<GameEvent, GameState> {
   final GetRandomQuiz getRandomQuiz;
+  final SaveHightScore saveHightScore;
+  final SaveLastScore saveLastScore;
+  final GetLastScore getLastScore;
+  final GetHightScore getHightScore;
+
   Timer? _roundTimer;
   int _currentScore = 0;
 
   GameBloc({
     required this.getRandomQuiz,
+    required this.saveHightScore,
+    required this.saveLastScore,
+    required this.getLastScore,
+    required this.getHightScore,
   }) : super(GameInitial()) {
     on<GameStarted>(_onGameStarted);
     on<AnswerQuestion>(_onAnswerQuestion);
@@ -27,6 +40,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   Future<void> _onGameStarted(
       GameStarted event, Emitter<GameState> emit) async {
     await _loadNewRound(emit);
+    _startTimer();
   }
 
   Future<void> _onAnswerQuestion(
@@ -36,7 +50,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
       if (event.answer == currentState.currentQuiz!.correctAnswer) {
         // Bonne réponse
-        _currentScore += 10;
+        _currentScore += 1;
         emit(currentState.copyWith(score: _currentScore));
         await _loadNewRound(emit);
       } else {
@@ -85,15 +99,24 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       },
       (quiz) {
         emit(GameInProgress(
-            currentQuiz: quiz, timeLeft: 600, score: _currentScore));
+          currentQuiz: quiz,
+          timeLeft: gameMaxTimeInSecond,
+          score: _currentScore,
+        ));
       },
     );
   }
 
   Future<void> _endGame(Emitter<GameState> emit) async {
     _roundTimer?.cancel();
-    // await scoreService.saveScore(currentState.score);
-    emit(GameOver(_currentScore));
+    await saveLastScore(_currentScore);
+    int? hightScore = await getHightScore();
+    if ((hightScore ?? 0) < _currentScore) {
+      saveHightScore(_currentScore);
+      hightScore = _currentScore;
+    }
+
+    emit(GameOver(_currentScore, hightScore ?? 0));
     _currentScore = 0;
   }
 

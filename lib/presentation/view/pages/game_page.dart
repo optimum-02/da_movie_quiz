@@ -10,9 +10,7 @@ class GamePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => GameBloc(
-        getRandomQuiz: di.get(),
-      ),
+      create: (context) => di.get<GameBloc>(),
       child: const PlayScreenContent(),
     );
   }
@@ -40,7 +38,7 @@ class PlayScreenContent extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => ScoresPage(
-                hightScore: 200,
+                hightScore: state.hightScore,
                 lastScore: (state).finalScore,
               ),
             ),
