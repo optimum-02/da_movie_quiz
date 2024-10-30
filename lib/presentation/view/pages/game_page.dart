@@ -25,6 +25,9 @@ class PlayScreenContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: const Icon(Icons.games_rounded),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         title: const Text('Da Movie Quiz'),
       ),
       body: BlocConsumer<GameBloc, GameState>(listener: (context, state) {
@@ -33,7 +36,15 @@ class PlayScreenContent extends StatelessWidget {
             SnackBar(content: Text(state.failure.toString())),
           );
         } else if (state is GameOver) {
-          _showGameOverDialog(context, state.finalScore);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ScoresPage(
+                hightScore: 200,
+                lastScore: (state).finalScore,
+              ),
+            ),
+          );
         }
       }, builder: (context, state) {
         return Center(
@@ -42,90 +53,12 @@ class PlayScreenContent extends StatelessWidget {
             child: Builder(
               builder: (context) {
                 return switch (state) {
-                  GameInitial() => ElevatedButton(
-                      onPressed: () =>
-                          context.read<GameBloc>().add(GameStarted()),
-                      child: const Text('PLAY'),
-                    ),
+                  GameInitial() => const StartGameWidget(),
                   RoundLoading() => const CircularProgressIndicator(),
-                  GameInProgress() => Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Temps restant: ${state.timeLeft}',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        Text(
-                          'Score: ${state.score}',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 20),
-                        if (state.currentQuiz != null) ...[
-                          CircleAvatar(
-                              radius: 50,
-                              backgroundImage: NetworkImage(
-                                  'https://image.tmdb.org/t/p/w200${state.currentQuiz!.actor.profilePath}'),
-                              child: Text(state.currentQuiz!.actor.name[0])),
-                          const SizedBox(height: 10),
-                          Text(
-                            state.currentQuiz!.actor.name,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 20),
-                          Image.network(
-                            'https://image.tmdb.org/t/p/w300${state.currentQuiz!.movie.posterPath}',
-                            height: 200,
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            state.currentQuiz!.movie.title,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 30),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () => context
-                                    .read<GameBloc>()
-                                    .add(AnswerQuestion(true)),
-                                child: const Text('OUI'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => context
-                                    .read<GameBloc>()
-                                    .add(AnswerQuestion(false)),
-                                child: const Text('NON'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  GameOver() => Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("Game Over! Your score: ${state.finalScore}"),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.read<GameBloc>().add(GameStarted());
-                          },
-                          child: const Text("Play Again"),
-                        ),
-                      ],
-                    ),
-                  GameError() => Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text("Oups ! Une erreur est intervenue"),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.read<GameBloc>().add(NewRoundLoaded());
-                          },
-                          child: const Text("Ressayer"),
-                        ),
-                      ],
-                    ),
+                  GameInProgress gameInProgress =>
+                    GameInProgressWidget(gameInProgress),
+                  GameOver() => const GameOverWidget(),
+                  GameError gameError => GameErrorWidget(gameError: gameError),
                 };
               },
             ),
@@ -134,37 +67,212 @@ class PlayScreenContent extends StatelessWidget {
       }),
     );
   }
+}
 
-  void _showGameOverDialog(BuildContext pageContext, int score) {
-    showDialog(
-      context: pageContext,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Game Over!'),
-          content: Text('Votre score: $score'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Rejouer'),
-              onPressed: () {
-                pageContext.read<GameBloc>().add(GameStarted());
-                Navigator.of(context).pop();
-              },
+class StartGameWidget extends StatelessWidget {
+  const StartGameWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        RichText(
+          text: TextSpan(
+              text: 'Dans un délai de  ',
+              children: [
+                TextSpan(
+                  text: '60 secondes',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary),
+                ),
+                const TextSpan(
+                    text:
+                        ' vous aurez à repondre à un nombre maximale de question.'),
+              ],
+              style: Theme.of(context).textTheme.bodyLarge),
+        ),
+        const SizedBox(height: 24),
+        RichText(
+          text: TextSpan(
+              text: 'Pour chaque question repondez par  ',
+              children: [
+                TextSpan(
+                  text: 'OUI / NON',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary),
+                ),
+                const TextSpan(
+                    text: ' en cliquant sur le button correspondant'),
+              ],
+              style: Theme.of(context).textTheme.bodyLarge),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              minimumSize: const Size.fromHeight(48)),
+          onPressed: () => context.read<GameBloc>().add(GameStarted()),
+          child: const Text('PLAY'),
+        ),
+      ],
+    );
+  }
+}
+
+class GameInProgressWidget extends StatelessWidget {
+  const GameInProgressWidget(
+    this.state, {
+    super.key,
+  });
+
+  final GameInProgress state;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          color: Theme.of(context).colorScheme.primaryContainer,
+          alignment: Alignment.center,
+          child: Text(
+            'Temps restant: ${state.timeLeft}',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+        ),
+        // Text(
+        //   'Score: ${state.score}',
+        //   style: Theme.of(context).textTheme.titleLarge,
+        // ),
+        const SizedBox(height: 20),
+        if (state.currentQuiz != null) ...[
+          CircleAvatar(
+            radius: 80,
+            backgroundImage: NetworkImage(
+                'https://image.tmdb.org/t/p/w200${state.currentQuiz!.actor.profilePath}'),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            state.currentQuiz!.actor.name,
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.network(
+                'https://image.tmdb.org/t/p/w500${state.currentQuiz!.movie.posterPath}',
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
             ),
-            TextButton(
-              child: const Text('Voir les scores'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ScoresPage(),
-                  ),
-                );
-              },
-            ),
-          ],
-        );
-      },
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+              width: MediaQuery.of(context).size.width / 2,
+              child: const Divider()),
+          // Text(
+          //   state.currentQuiz!.movie.title,
+          //   style: Theme.of(context).textTheme.labelMedium,
+          // ),
+          const SizedBox(height: 30),
+          Text(
+            "L'acteur a t il joué dans le film ci-dessus ?",
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 30),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    minimumSize: const Size(48, 48)),
+                onPressed: () =>
+                    context.read<GameBloc>().add(AnswerQuestion(true)),
+                label: const Text('OUI'),
+                icon: const Icon(Icons.check_circle_rounded),
+              ),
+              OutlinedButton.icon(
+                label: const Text("NON"),
+                icon: const Icon(Icons.cancel_rounded),
+                style: ElevatedButton.styleFrom(
+                  // backgroundColor:
+                  //     Theme.of(context).colorScheme.primary,
+                  // foregroundColor:
+                  //     Theme.of(context).colorScheme.onPrimary,
+                  minimumSize: const Size(48, 48),
+                ),
+                onPressed: () =>
+                    context.read<GameBloc>().add(AnswerQuestion(false)),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class GameErrorWidget extends StatelessWidget {
+  const GameErrorWidget({
+    super.key,
+    required this.gameError,
+  });
+
+  final GameError gameError;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(gameError.failure.toMessage()),
+        ElevatedButton(
+          onPressed: () {
+            context.read<GameBloc>().add(NewRoundLoaded());
+          },
+          child: const Text("Retry"),
+        ),
+      ],
+    );
+  }
+}
+
+class GameOverWidget extends StatelessWidget {
+  const GameOverWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+            "Vous pouvez rejouer afin d'établir un nouveau record de score"),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              minimumSize: const Size.fromHeight(48)),
+          onPressed: () {
+            context.read<GameBloc>().add(GameStarted());
+          },
+          child: const Text("Play Again"),
+        ),
+      ],
     );
   }
 }

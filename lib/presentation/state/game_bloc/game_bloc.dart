@@ -85,8 +85,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       },
       (quiz) {
         emit(GameInProgress(
-            currentQuiz: quiz, timeLeft: 60, score: _currentScore));
-        _startTimer();
+            currentQuiz: quiz, timeLeft: 600, score: _currentScore));
       },
     );
   }
