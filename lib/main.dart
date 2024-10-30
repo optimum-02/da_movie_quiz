@@ -2,9 +2,9 @@ import 'package:da_movie_quiz/core/dependencie_injection.dart';
 import 'package:da_movie_quiz/presentation/view/pages/game_page.dart';
 import 'package:flutter/material.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await setup();
+  setupDependenciesInjection();
   runApp(const MainApp());
 }
 

@@ -1,22 +1,24 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 final class ScoreDataSource {
-  final SharedPreferences sharedPreferences;
+  final FlutterSecureStorage secureStorage;
 
-  ScoreDataSource(this.sharedPreferences);
+  ScoreDataSource(this.secureStorage);
   Future<void> saveLastScore(int score) async {
-    await sharedPreferences.setInt("lastScore", score);
+    await secureStorage.write(key: "lastScore", value: "$score");
   }
 
   Future<void> saveHightScore(int hightScore) async {
-    await sharedPreferences.setInt("hightScore", hightScore);
+    await secureStorage.write(key: "hightScore", value: "$hightScore");
   }
 
-  int? hightScore() {
-    return sharedPreferences.getInt("hightScore");
+  Future<int?> hightScore() async {
+    final value = await secureStorage.read(key: "hightScore");
+    return int.tryParse(value ?? "");
   }
 
-  int? lastScore() {
-    return sharedPreferences.getInt("hightScore");
+  Future<int?> lastScore() async {
+    final value = await secureStorage.read(key: "lastScore");
+    return int.tryParse(value ?? "");
   }
 }
