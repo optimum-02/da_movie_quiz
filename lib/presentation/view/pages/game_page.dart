@@ -258,8 +258,11 @@ class GameOverWidget extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-            "Vous pouvez rejouer afin d'établir un nouveau record de score"),
+        Text(
+          "Vous pouvez rejouer afin d'établir un nouveau record de score",
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: 24),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
