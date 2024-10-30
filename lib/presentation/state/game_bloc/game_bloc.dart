@@ -22,6 +22,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
   Timer? _roundTimer;
   int _currentScore = 0;
+  int _timeLeft = gameMaxTimeInSecond;
 
   GameBloc({
     required this.getRandomQuiz,
@@ -39,6 +40,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
   Future<void> _onGameStarted(
       GameStarted event, Emitter<GameState> emit) async {
+    emit(RoundLoading());
     await _loadNewRound(emit);
     _startTimer();
   }
@@ -64,9 +66,10 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     if (state is GameInProgress) {
       final currentState = state as GameInProgress;
       if (currentState.timeLeft > 0) {
-        emit(currentState.copyWith(timeLeft: currentState.timeLeft - 1));
+        _timeLeft -= 1;
+        emit(currentState.copyWith(timeLeft: _timeLeft));
       } else {
-        _endGame(emit);
+        add(GameEnded());
       }
     }
   }
@@ -89,8 +92,8 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   }
 
   Future<void> _loadNewRound(Emitter<GameState> emit) async {
-    emit(RoundLoading());
-
+    emit(GameInProgress(
+        roundLoading: true, timeLeft: _timeLeft, score: _currentScore));
     final failureOrQuiz = await getRandomQuiz();
 
     failureOrQuiz.match(
@@ -98,11 +101,8 @@ class GameBloc extends Bloc<GameEvent, GameState> {
         emit(GameError(failure));
       },
       (quiz) {
-        emit(GameInProgress(
-          currentQuiz: quiz,
-          timeLeft: gameMaxTimeInSecond,
-          score: _currentScore,
-        ));
+        emit((state as GameInProgress).copyWith(
+            roundLoading: false, currentQuiz: quiz, score: _currentScore));
       },
     );
   }
@@ -118,6 +118,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
     emit(GameOver(_currentScore, hightScore ?? 0));
     _currentScore = 0;
+    _timeLeft = gameMaxTimeInSecond;
   }
 
   @override

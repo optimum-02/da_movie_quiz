@@ -29,11 +29,7 @@ class PlayScreenContent extends StatelessWidget {
         title: const Text('Da Movie Quiz'),
       ),
       body: BlocConsumer<GameBloc, GameState>(listener: (context, state) {
-        if (state is GameError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.failure.toString())),
-          );
-        } else if (state is GameOver) {
+        if (state is GameOver) {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -151,7 +147,10 @@ class GameInProgressWidget extends StatelessWidget {
         //   style: Theme.of(context).textTheme.titleLarge,
         // ),
         const SizedBox(height: 20),
-        if (state.currentQuiz != null) ...[
+
+        if (state.roundLoading)
+          const Expanded(child: Center(child: CircularProgressIndicator()))
+        else if (state.currentQuiz != null) ...[
           CircleAvatar(
             radius: 80,
             backgroundImage: NetworkImage(
