@@ -10,16 +10,32 @@ class ScoresPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         title: const Text('Vos scores'),
       ),
       body: ListView(
         children: [
           ListTile(
-            title: const Text("Hight score"),
-            trailing: Text("$hightScore"),
+            title: const Text("Your score"),
+            trailing: CircleAvatar(
+              radius: 20,
+              child: Text(
+                "$lastScore",
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
           ),
           ListTile(
-              title: const Text("Last score"), trailing: Text("$lastScore"))
+            title: const Text("Hight score"),
+            trailing: CircleAvatar(
+              radius: 20,
+              child: Text(
+                "$hightScore",
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+          ),
         ],
       ),
     );
