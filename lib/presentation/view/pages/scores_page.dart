@@ -15,6 +15,7 @@ class ScoresPage extends StatelessWidget {
         title: const Text('Vos scores'),
       ),
       body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
           ListTile(
             title: const Text("Your score"),
