@@ -1,19 +1,16 @@
 import 'dart:convert';
 
 import '../../domain/entities/entities.dart';
-import 'movie_dto.dart';
 
 class MovieActorDTO {
   final int id;
   final String name;
   final String profilePath;
-  final List<MovieDTO> movies;
 
   MovieActorDTO({
     required this.id,
     required this.name,
     required this.profilePath,
-    required this.movies,
   });
 
   factory MovieActorDTO.fromJson(Map<String, dynamic> json) {
@@ -21,9 +18,6 @@ class MovieActorDTO {
       id: json['id'],
       name: json['name'],
       profilePath: json['profile_path'],
-      movies: (json['movies'] as List<dynamic>)
-          .map((movieJson) => MovieDTO.fromJson(movieJson))
-          .toList(),
     );
   }
 
@@ -32,7 +26,6 @@ class MovieActorDTO {
       id: id,
       name: name,
       profilePath: profilePath,
-      movies: movies.map((movieDTO) => movieDTO.toMovie()).toList(),
     );
   }
 
@@ -41,7 +34,6 @@ class MovieActorDTO {
       'id': id,
       'name': name,
       'profile_path': profilePath,
-      'movies': movies.map((movieDTO) => movieDTO.toMap()).toList(),
     };
   }
 
